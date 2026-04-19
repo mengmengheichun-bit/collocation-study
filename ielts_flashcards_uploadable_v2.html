@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>IELTS Collocation Flashcards</title>
+  <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  <style>
+    :root{
+      --bg:#ffffff; --text:#111111; --muted:#666666; --line:#dddddd; --soft:#f6f6f6;
+      --radius:16px; --font:15px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font:var(--font)/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+    .wrap{max-width:900px;margin:0 auto;padding:14px}
+    h1{margin:0 0 4px;font-size:1.2rem}
+    .sub,.label,.small{color:var(--muted)}
+    .panel,.card,.status{
+      border:1px solid var(--line); border-radius:14px; background:#fff;
+    }
+    .panel,.status{padding:12px}
+    .panel{margin:10px 0}
+    .row,.tabs,.actions,.footer-actions,.top-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    select,textarea,button,input[type=file]{font:inherit}
+    select,textarea{
+      width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:12px;
+      background:#fff; color:var(--text);
+    }
+    textarea{min-height:150px;resize:vertical}
+    button{
+      padding:10px 14px; border:1px solid var(--line); border-radius:12px;
+      background:#fff; color:var(--text); cursor:pointer;
+    }
+    button.primary,.tab-btn.active{background:#111;color:#fff;border-color:#111}
+    .tabs{margin:12px 0 10px}
+    .toolbar{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;margin-bottom:10px}
+    .card{padding:16px;min-height:240px;box-shadow:0 6px 24px rgba(0,0,0,.05)}
+    .topic-tag{
+      display:inline-block;padding:5px 10px;border:1px solid var(--line);
+      border-radius:999px;background:var(--soft);margin-bottom:12px;color:var(--muted)
+    }
+    .big{font-size:1.22rem;font-weight:700;margin:4px 0 10px}
+    .divider{height:1px;background:var(--line);margin:14px 0}
+    .hidden{display:none!important}
+    .answer{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}
+    .empty{text-align:center;color:var(--muted);padding:22px 10px}
+    .ok{color:#0a7a33}
+    .warn{color:#a15c00}
+    .tiny{font-size:.9rem;color:var(--muted)}
+    @media (max-width:640px){
+      .toolbar{grid-template-columns:1fr}
+      .card{min-height:220px}
+      .wrap{padding:12px}
+      button{padding:9px 12px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>IELTS Collocation Flashcards</h1>
+  <div class="sub">Upload file Word để học và thực hành.</div>
+
+  <div class="panel">
+    <div class="top-actions">
+      <input id="fileInput" type="file" accept=".docx,.txt">
+      <button id="loadDemoBtn">Nạp dữ liệu mẫu</button>
+      <button id="clearDataBtn">Xóa dữ liệu app</button>
+    </div>
+    <div id="statusBox" class="status" style="margin-top:10px">Chưa có dữ liệu. Hãy upload file Word (.docx) hoặc bấm “Nạp dữ liệu mẫu”.</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="study">Học</button>
+    <button class="tab-btn" data-tab="practice">Thực hành</button>
+  </div>
+
+  <div class="toolbar">
+    <div>
+      <div class="label">Chủ đề</div>
+      <select id="topicSelect"><option value="all">Tất cả chủ đề</option></select>
+    </div>
+    <div>
+      <div class="label">Tiến độ</div>
+      <div id="progressText" class="panel" style="margin:0;padding:10px 12px;color:#666">0 / 0</div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:10px">
+    <button id="shuffleBtn">Trộn thứ tự: Tắt</button>
+    <button id="speakBtn">🔊 Nghe collocation</button>
+  </div>
+
+  <section id="studyTab">
+    <div id="studyEmpty" class="empty">Chưa có dữ liệu để học.</div>
+    <div id="studyCard" class="card hidden">
+      <div class="topic-tag" id="studyTopic"></div>
+      <div id="studyFront">
+        <div class="label">Collocation</div>
+        <div class="big" id="studyCollocation"></div>
+        <div class="label">Nghĩa</div>
+        <div id="studyMeaning"></div>
+      </div>
+      <div id="studyBack" class="hidden">
+        <div class="label">Câu tiếng Việt</div>
+        <div id="studyVietnamese"></div>
+        <div class="divider"></div>
+        <div class="label">Câu tiếng Anh</div>
+        <div id="studyEnglish"></div>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button id="flipBtn" class="primary">Lật thẻ</button>
+        <button id="prevStudyBtn">Câu trước</button>
+        <button id="nextStudyBtn">Câu sau</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="practiceTab" class="hidden">
+    <div id="practiceEmpty" class="empty">Chưa có dữ liệu để thực hành.</div>
+    <div id="practiceCard" class="card hidden">
+      <div class="topic-tag" id="practiceTopic"></div>
+      <div class="label">Collocation</div>
+      <div class="big" id="practiceCollocation"></div>
+      <div class="label">Nghĩa</div>
+      <div id="practiceMeaning"></div>
+      <div class="divider"></div>
+      <div class="label">Câu tiếng Việt</div>
+      <div id="practiceVietnamese"></div>
+      <div style="margin-top:14px">
+        <div class="label">Câu tiếng Anh của bạn</div>
+        <textarea id="practiceInput" placeholder="Viết câu tiếng Anh của bạn ở đây..."></textarea>
+      </div>
+      <div class="footer-actions" style="margin-top:14px">
+        <button id="checkBtn" class="primary">Check</button>
+        <button id="prevPracticeBtn">Câu trước</button>
+        <button id="nextPracticeBtn">Câu sau</button>
+        <button id="clearCurrentBtn">Xóa câu hiện tại</button>
+      </div>
+      <div id="answerBox" class="answer hidden">
+        <div class="label">Đáp án mẫu</div>
+        <div id="practiceEnglish"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const STORAGE_KEY="ielts_flashcards_data_v5";
+const ANSWERS_KEY="ielts_flashcards_answers_v5";
+const INDEX_KEY="ielts_flashcards_index_v5";
+const TAB_KEY="ielts_flashcards_tab_v5";
+const SHUFFLE_KEY="ielts_flashcards_shuffle_v5";
+
+let allItems=[];
+let filteredItems=[];
+let currentIndex=0;
+let currentTab=localStorage.getItem(TAB_KEY)||"study";
+let answers=JSON.parse(localStorage.getItem(ANSWERS_KEY)||"{}");
+let shuffleMode=localStorage.getItem(SHUFFLE_KEY)==="true";
+
+const demoData=[
+  {topic:"Education",collocation:"quality of education",meaning:"chất lượng giáo dục",vietnamese:"Chất lượng giáo dục đóng vai trò quan trọng trong sự phát triển lâu dài của một quốc gia.",english:"The quality of education plays an important role in a country's long-term development."},
+  {topic:"Environment",collocation:"climate change",meaning:"biến đổi khí hậu",vietnamese:"Biến đổi khí hậu đang trở thành một trong những thách thức nghiêm trọng nhất mà nhân loại phải đối mặt.",english:"Climate change is becoming one of the most serious challenges that humanity has to face."}
+];
+
+const els={
+  fileInput:document.getElementById("fileInput"),
+  loadDemoBtn:document.getElementById("loadDemoBtn"),
+  clearDataBtn:document.getElementById("clearDataBtn"),
+  statusBox:document.getElementById("statusBox"),
+  topicSelect:document.getElementById("topicSelect"),
+  progressText:document.getElementById("progressText"),
+  shuffleBtn:document.getElementById("shuffleBtn"),
+  speakBtn:document.getElementById("speakBtn"),
+  studyTab:document.getElementById("studyTab"),
+  practiceTab:document.getElementById("practiceTab"),
+  studyEmpty:document.getElementById("studyEmpty"),
+  studyCard:document.getElementById("studyCard"),
+  studyTopic:document.getElementById("studyTopic"),
+  studyCollocation:document.getElementById("studyCollocation"),
+  studyMeaning:document.getElementById("studyMeaning"),
+  studyVietnamese:document.getElementById("studyVietnamese"),
+  studyEnglish:document.getElementById("studyEnglish"),
+  studyFront:document.getElementById("studyFront"),
+  studyBack:document.getElementById("studyBack"),
+  practiceEmpty:document.getElementById("practiceEmpty"),
+  practiceCard:document.getElementById("practiceCard"),
+  practiceTopic:document.getElementById("practiceTopic"),
+  practiceCollocation:document.getElementById("practiceCollocation"),
+  practiceMeaning:document.getElementById("practiceMeaning"),
+  practiceVietnamese:document.getElementById("practiceVietnamese"),
+  practiceInput:document.getElementById("practiceInput"),
+  answerBox:document.getElementById("answerBox"),
+  practiceEnglish:document.getElementById("practiceEnglish")
+};
+
+function saveData(items){localStorage.setItem(STORAGE_KEY,JSON.stringify(items))}
+function loadSavedData(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch{return []}}
+function saveAnswers(){localStorage.setItem(ANSWERS_KEY,JSON.stringify(answers))}
+function saveIndex(){localStorage.setItem(INDEX_KEY,String(currentIndex))}
+function loadIndex(){const n=Number(localStorage.getItem(INDEX_KEY));return Number.isFinite(n)?n:0}
+function normalizeText(s){return (s||"").replace(/\r/g,"").replace(/\u00A0/g," ").replace(/\s+/g," ").trim()}
+function uniqueItems(items){
+  const seen=new Set();
+  return items.filter(item=>{
+    const key=[item.topic,item.collocation,item.meaning,item.vietnamese,item.english].join("|||");
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+function shuffleArray(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function parseStructuredText(text){
+  const cleaned=(text||"").replace(/\r/g,"");
+  if(!cleaned.trim()) return [];
+  const lines=cleaned.split("\n").map(l=>l.trim()).filter(Boolean);
+  const items=[];
+  let current={topic:"",collocation:"",meaning:"",vietnamese:"",english:""};
+
+  function pushCurrent(){
+    if(current.topic&&current.collocation&&current.meaning&&current.vietnamese&&current.english){
+      items.push({...current});
+    }
+  }
+
+  for(const line of lines){
+    const lower=line.toLowerCase();
+    if(lower.startsWith("topic:")){
+      if(current.collocation||current.meaning||current.vietnamese||current.english){
+        pushCurrent();
+        current={topic:"",collocation:"",meaning:"",vietnamese:"",english:""};
+      }
+      current.topic=normalizeText(line.split(":").slice(1).join(":"));
+    }else if(lower.startsWith("collocation:")){
+      if(current.collocation&&current.meaning&&current.vietnamese&&current.english){
+        pushCurrent();
+        current={topic:current.topic,collocation:"",meaning:"",vietnamese:"",english:""};
+      }
+      current.collocation=normalizeText(line.split(":").slice(1).join(":"));
+    }else if(lower.startsWith("meaning:")||lower.startsWith("nghĩa:")){
+      current.meaning=normalizeText(line.split(":").slice(1).join(":"));
+    }else if(lower.startsWith("vietnamese sentence:")||lower.startsWith("câu tiếng việt:")){
+      current.vietnamese=normalizeText(line.split(":").slice(1).join(":"));
+    }else if(lower.startsWith("english sentence:")||lower.startsWith("câu tiếng anh:")){
+      current.english=normalizeText(line.split(":").slice(1).join(":"));
+    }
+  }
+  pushCurrent();
+  return uniqueItems(items);
+}
+
+function parseHtmlTable(html){
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(html,"text/html");
+  const rows=[...doc.querySelectorAll("tr")];
+  const items=[];
+
+  for(const row of rows){
+    const cells=[...row.querySelectorAll("td,th")].map(c=>normalizeText(c.textContent));
+    if(cells.length < 5) continue;
+
+    const firstFive=cells.slice(0,5);
+    const joined=firstFive.join(" ").toLowerCase();
+
+    if(joined.includes("topic") && joined.includes("collocation") && joined.includes("meaning")) continue;
+    if(firstFive[1] && firstFive[1].toLowerCase()==="collocation") continue;
+
+    const item={
+      topic:firstFive[0],
+      collocation:firstFive[1],
+      meaning:firstFive[2],
+      vietnamese:firstFive[3],
+      english:firstFive[4]
+    };
+
+    if(item.topic && item.collocation && item.meaning && item.vietnamese && item.english){
+      items.push(item);
+    }
+  }
+  return uniqueItems(items);
+}
+
+async function parseDocxFile(file){
+  const arrayBuffer=await file.arrayBuffer();
+  const htmlResult=await mammoth.convertToHtml({arrayBuffer});
+  const tableItems=parseHtmlTable(htmlResult.value||"");
+  if(tableItems.length) return tableItems;
+  const rawResult=await mammoth.extractRawText({arrayBuffer});
+  return parseStructuredText(rawResult.value||"");
+}
+async function parseTxtFile(file){
+  const text=await file.text();
+  return parseStructuredText(text);
+}
+
+function rebuildTopics(){
+  const currentValue=els.topicSelect.value||"all";
+  const topics=[...new Set(allItems.map(x=>x.topic))].sort((a,b)=>a.localeCompare(b));
+  els.topicSelect.innerHTML='<option value="all">Tất cả chủ đề</option>'+topics.map(t=>'<option value="'+t.replace(/"/g,'&quot;')+'">'+t+'</option>').join("");
+  els.topicSelect.value=topics.includes(currentValue)?currentValue:"all";
+}
+
+function applyFilter(){
+  const topic=els.topicSelect.value;
+  let base=topic==="all"?[...allItems]:allItems.filter(x=>x.topic===topic);
+  filteredItems=shuffleMode ? shuffleArray(base) : base;
+  if(currentIndex>=filteredItems.length) currentIndex=Math.max(0,filteredItems.length-1);
+  render();
+  saveIndex();
+}
+
+function updateProgress(){
+  els.progressText.textContent=filteredItems.length?(currentIndex+1)+" / "+filteredItems.length:"0 / 0";
+  els.shuffleBtn.textContent="Trộn thứ tự: " + (shuffleMode ? "Bật" : "Tắt");
+}
+
+function resetStudySide(){
+  els.studyFront.classList.remove("hidden");
+  els.studyBack.classList.add("hidden");
+  document.getElementById("flipBtn").textContent="Lật thẻ";
+}
+
+function render(){
+  updateProgress();
+  if(!filteredItems.length){
+    els.studyEmpty.classList.remove("hidden");
+    els.studyCard.classList.add("hidden");
+    els.practiceEmpty.classList.remove("hidden");
+    els.practiceCard.classList.add("hidden");
+    return;
+  }
+  const item=filteredItems[currentIndex];
+  els.studyEmpty.classList.add("hidden");
+  els.studyCard.classList.remove("hidden");
+  els.practiceEmpty.classList.add("hidden");
+  els.practiceCard.classList.remove("hidden");
+
+  els.studyTopic.textContent=item.topic;
+  els.studyCollocation.textContent=item.collocation;
+  els.studyMeaning.textContent=item.meaning;
+  els.studyVietnamese.textContent=item.vietnamese;
+  els.studyEnglish.textContent=item.english;
+
+  els.practiceTopic.textContent=item.topic;
+  els.practiceCollocation.textContent=item.collocation;
+  els.practiceMeaning.textContent=item.meaning;
+  els.practiceVietnamese.textContent=item.vietnamese;
+  els.practiceEnglish.textContent=item.english;
+
+  const key=getCurrentAnswerKey();
+  els.practiceInput.value=answers[key]||"";
+  els.answerBox.classList.add("hidden");
+  resetStudySide();
+}
+
+function getCurrentAnswerKey(){
+  const item=filteredItems[currentIndex];
+  return item.topic+"|||"+item.collocation+"|||"+item.vietnamese;
+}
+function prevItem(){if(filteredItems.length){currentIndex=(currentIndex-1+filteredItems.length)%filteredItems.length;render();saveIndex()}}
+function nextItem(){if(filteredItems.length){currentIndex=(currentIndex+1)%filteredItems.length;render();saveIndex()}}
+function saveCurrentAnswer(){if(filteredItems.length){answers[getCurrentAnswerKey()]=els.practiceInput.value;saveAnswers()}}
+function switchTab(tab){
+  currentTab=tab;
+  localStorage.setItem(TAB_KEY,tab);
+  document.querySelectorAll(".tab-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.tab===tab));
+  els.studyTab.classList.toggle("hidden",tab!=="study");
+  els.practiceTab.classList.toggle("hidden",tab!=="practice");
+}
+function loadItems(items,sourceLabel){
+  allItems=items;
+  saveData(items);
+  rebuildTopics();
+  currentIndex=0;
+  applyFilter();
+  els.statusBox.innerHTML='<span class="ok">Đã nạp '+items.length+' mục từ '+sourceLabel+'.</span>';
+}
+function speakCurrent(){
+  if(!filteredItems.length || !('speechSynthesis' in window)) return;
+  const item=filteredItems[currentIndex];
+  window.speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(item.collocation);
+  utt.lang='en-US';
+  utt.rate=0.95;
+  const voices=window.speechSynthesis.getVoices();
+  const preferred=voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
+  if(preferred) utt.voice=preferred;
+  window.speechSynthesis.speak(utt);
+}
+
+document.querySelectorAll(".tab-btn").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.dataset.tab)));
+els.topicSelect.addEventListener("change",()=>{currentIndex=0;applyFilter()});
+document.getElementById("flipBtn").addEventListener("click",()=>{
+  const frontVisible=!els.studyFront.classList.contains("hidden");
+  els.studyFront.classList.toggle("hidden",frontVisible);
+  els.studyBack.classList.toggle("hidden",!frontVisible);
+  document.getElementById("flipBtn").textContent=frontVisible?"Về mặt trước":"Lật thẻ";
+});
+document.getElementById("prevStudyBtn").addEventListener("click",prevItem);
+document.getElementById("nextStudyBtn").addEventListener("click",nextItem);
+document.getElementById("prevPracticeBtn").addEventListener("click",prevItem);
+document.getElementById("nextPracticeBtn").addEventListener("click",nextItem);
+document.getElementById("checkBtn").addEventListener("click",()=>{saveCurrentAnswer();els.answerBox.classList.remove("hidden")});
+document.getElementById("clearCurrentBtn").addEventListener("click",()=>{els.practiceInput.value="";saveCurrentAnswer();els.answerBox.classList.add("hidden")});
+els.practiceInput.addEventListener("input",saveCurrentAnswer);
+els.speakBtn.addEventListener("click",speakCurrent);
+els.shuffleBtn.addEventListener("click",()=>{
+  shuffleMode=!shuffleMode;
+  localStorage.setItem(SHUFFLE_KEY, String(shuffleMode));
+  currentIndex=0;
+  applyFilter();
+});
+
+els.loadDemoBtn.addEventListener("click",()=>loadItems(demoData,"dữ liệu mẫu"));
+els.clearDataBtn.addEventListener("click",()=>{
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(ANSWERS_KEY);
+  localStorage.removeItem(INDEX_KEY);
+  answers={};allItems=[];filteredItems=[];currentIndex=0;
+  rebuildTopics();applyFilter();
+  els.statusBox.textContent="Đã xóa toàn bộ dữ liệu app.";
+});
+
+els.fileInput.addEventListener("change",async(e)=>{
+  const file=e.target.files&&e.target.files[0];
+  if(!file) return;
+  els.statusBox.innerHTML='<span class="warn">Đang đọc file...</span>';
+  try{
+    let items=[];
+    const name=file.name.toLowerCase();
+    if(name.endsWith(".docx")) items=await parseDocxFile(file);
+    else if(name.endsWith(".txt")) items=await parseTxtFile(file);
+    else throw new Error("Chỉ hỗ trợ .docx hoặc .txt");
+
+    if(!items.length) throw new Error("Không đọc được dữ liệu.");
+    loadItems(items,file.name);
+  }catch(err){
+    els.statusBox.textContent="Lỗi khi đọc file:\n"+(err&&err.message?err.message:String(err));
+  }finally{
+    e.target.value="";
+  }
+});
+
+switchTab(currentTab);
+allItems=loadSavedData();
+rebuildTopics();
+currentIndex=loadIndex();
+applyFilter();
+if(allItems.length){
+  els.statusBox.innerHTML='<span class="ok">Đã khôi phục '+allItems.length+' mục từ dữ liệu đã lưu trên máy.</span>';
+}
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = () => {};
+}
+</script>
+</body>
+</html>
